@@ -1,0 +1,36 @@
+---
+- name: Configure nftables on target machine
+  hosts: 192.168.23.4  
+  become: yes  
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+    
+    - name: Ensure nftables is installed
+      apt:
+        name: nftables
+        state: latest
+
+    - name: Ensure nftables is enabled and running
+      service:
+        name: nftables
+        state: started
+        enabled: yes
+
+    - name: Copy nftables.conf file to the target machine
+      copy:
+        src: nftables.conf
+        dest: /etc/nftables.conf
+        mode: '0644'
+    
+    - name: Apply nftables configuration
+      command: nft -f /etc/nftables.conf
+      notify:
+        - Restart nftables
+
+  handlers:
+    - name: Restart nftables
+      service:
+        name: nftables
+        state: restarted
